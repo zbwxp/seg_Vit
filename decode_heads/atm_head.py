@@ -139,6 +139,7 @@ class ATMHead(BaseDecodeHead):
             num_layers=3,
             num_heads=8,
             use_stages=3,
+            CE_loss=False,
             **kwargs,
     ):
         super(ATMHead, self).__init__(
@@ -175,7 +176,7 @@ class ATMHead(BaseDecodeHead):
         self.class_embed = nn.Linear(dim, self.num_classes + 1)
         mask_dim = self.num_classes
         self.mask_embed = MLP(dim, dim, mask_dim, 3)
-
+        self.CE_loss = CE_loss
         delattr(self, 'conv_seg')
 
     def init_weights(self):
@@ -279,13 +280,15 @@ class ATMHead(BaseDecodeHead):
     @force_fp32(apply_to=('seg_logit',))
     def losses(self, seg_logit, seg_label):
         """Compute segmentation loss."""
+        if self.CE_loss:
+            return super().losses(seg_logit["pred"], seg_label)
+
         if isinstance(seg_logit, dict):
             # atm loss
             seg_label = seg_label.squeeze(1)
             loss = self.loss_decode(
                 seg_logit,
                 seg_label,
-                weight=None,
                 ignore_index=self.ignore_index)
 
             loss['acc_seg'] = accuracy(seg_logit["pred"], seg_label)

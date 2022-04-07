@@ -16,10 +16,6 @@ class ATMLoss(nn.Module):
                  dec_layers,
                  mask_weight=20.0,
                  dice_weight=1.0,
-                 use_sigmoid=False,
-                 use_mask=False,
-                 reduction='mean',
-                 class_weight=None,
                  loss_weight=1.0):
         super(ATMLoss, self).__init__()
         weight_dict = {"loss_ce": 1, "loss_mask": mask_weight, "loss_dice": dice_weight}
@@ -32,14 +28,13 @@ class ATMLoss(nn.Module):
             weight_dict=weight_dict,
             losses=["labels", "masks"],
         )
+        self.loss_weight = loss_weight
 
     def forward(self,
                 outputs,
                 label,
                 ignore_index,
-                weight=None,
-                avg_factor=None,
-                reduction_override=None,):
+                ):
         """Forward function."""
         self.ignore_index = ignore_index
         targets = self.prepare_targets(label)
@@ -47,7 +42,7 @@ class ATMLoss(nn.Module):
 
         for k in list(losses.keys()):
             if k in self.criterion.weight_dict:
-                losses[k] *= self.criterion.weight_dict[k]
+                losses[k] = losses[k] * self.criterion.weight_dict[k] * self.loss_weight
             else:
                 # remove this loss if not specified in `weight_dict`
                 losses.pop(k)

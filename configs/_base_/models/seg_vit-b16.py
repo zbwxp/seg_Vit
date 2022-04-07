@@ -35,7 +35,7 @@ model = dict(
         use_stages=len(out_indices),
         embed_dims=in_channels // 2,
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+            type='ATMLoss', num_classes=150, dec_layers=len(out_indices), loss_weight=1.0),
     ),
     test_cfg=dict(mode='slide', crop_size=(512, 512), stride=(341, 341)),
 )
