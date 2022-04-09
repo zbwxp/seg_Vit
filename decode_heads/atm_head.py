@@ -7,6 +7,7 @@ from typing import Optional
 import math
 from functools import partial
 from mmcv.runner import auto_fp16, force_fp32
+import matplotlib.pyplot as plt
 
 from mmseg.models.builder import HEADS
 from mmseg.models.decode_heads.decode_head import BaseDecodeHead
@@ -140,6 +141,7 @@ class ATMHead(BaseDecodeHead):
             num_heads=8,
             use_stages=3,
             CE_loss=False,
+            crop_train=False,
             **kwargs,
     ):
         super(ATMHead, self).__init__(
@@ -147,6 +149,7 @@ class ATMHead(BaseDecodeHead):
 
         self.image_size = img_size
         self.use_stages = use_stages
+        self.crop_train = crop_train
         nhead = num_heads
         dim = embed_dims
         input_proj = []
@@ -188,7 +191,7 @@ class ATMHead(BaseDecodeHead):
 
     def forward(self, inputs):
         x = []
-        for stage_ in inputs:
+        for stage_ in inputs[:self.use_stages]:
             x.append(self.d4_to_d3(stage_) if stage_.dim() > 3 else stage_)
         x.reverse()
         bs = x[0].size()[0]
@@ -216,6 +219,12 @@ class ATMHead(BaseDecodeHead):
 
             q, attn = decoder_(q, lateral.transpose(0, 1))
             attn = attn.transpose(-1, -2)
+            if self.crop_train and self.training:
+                blank_attn = torch.zeros_like(attn)
+                blank_attn = blank_attn[:, 0].unsqueeze(1).repeat(1, (self.image_size//16)**2, 1)
+                blank_attn[:, inputs[-1]] = attn
+                attn = blank_attn
+                self.crop_idx = inputs[-1]
             attn = self.d3_to_d4(attn)
             maps_size.append(attn.size()[-2:])
             qs.append(q.transpose(0, 1))
@@ -286,6 +295,15 @@ class ATMHead(BaseDecodeHead):
         if isinstance(seg_logit, dict):
             # atm loss
             seg_label = seg_label.squeeze(1)
+            if self.crop_train:
+                # mask seg_label by crop_idx
+                bs, h, w = seg_label.size()
+                mask_label = seg_label.reshape(bs, h//16, 16, w//16, 16)\
+                    .permute(0, 1, 3, 2, 4).reshape(bs, h*w//256, 256)
+                empty_label = torch.zeros_like(mask_label) + self.ignore_index
+                empty_label[:, self.crop_idx] = mask_label[:, self.crop_idx]
+                seg_label = empty_label.reshape(bs, h//16, w//16, 16, 16)\
+                    .permute(0, 1, 3, 2, 4).reshape(bs, h, w)
             loss = self.loss_decode(
                 seg_logit,
                 seg_label,

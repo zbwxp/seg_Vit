@@ -20,7 +20,7 @@ from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger, setup_multi_processes
 from decode_heads import atm_head
 from losses import atm_loss
-from backbone import vit_shrink
+from backbone import vit_shrink, vit_crop
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
