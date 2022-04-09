@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 from mmseg.models.builder import LOSSES
 from .criterion import SetCriterion
-
+from .criterion_point import SetCriterion_point
 @LOSSES.register_module()
 class ATMLoss(nn.Module):
     """ATMLoss.
@@ -16,18 +16,27 @@ class ATMLoss(nn.Module):
                  dec_layers,
                  mask_weight=20.0,
                  dice_weight=1.0,
-                 loss_weight=1.0):
+                 cls_weight=1.0,
+                 loss_weight=1.0,
+                 use_point=False):
         super(ATMLoss, self).__init__()
-        weight_dict = {"loss_ce": 1, "loss_mask": mask_weight, "loss_dice": dice_weight}
+        weight_dict = {"loss_ce": cls_weight, "loss_mask": mask_weight, "loss_dice": dice_weight}
         aux_weight_dict = {}
         for i in range(dec_layers - 1):
             aux_weight_dict.update({k + f"_{i}": v for k, v in weight_dict.items()})
         weight_dict.update(aux_weight_dict)
-        self.criterion = SetCriterion(
-            num_classes,
-            weight_dict=weight_dict,
-            losses=["labels", "masks"],
-        )
+        if use_point:
+            self.criterion = SetCriterion_point(
+                num_classes,
+                weight_dict=weight_dict,
+                losses=["labels", "masks"],
+            )
+        else:
+            self.criterion = SetCriterion(
+                num_classes,
+                weight_dict=weight_dict,
+                losses=["labels", "masks"],
+            )
         self.loss_weight = loss_weight
 
     def forward(self,
