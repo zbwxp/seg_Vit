@@ -4,6 +4,7 @@ _base_ = [
     '../_base_/schedules/schedule_160k.py'
 ]
 in_channels = 1024
+img_size = 640
 checkpoint = './pretrained/vit_large_p16_jx.pth'
 out_indices = [7, 15, 23]
 model = dict(
@@ -15,6 +16,7 @@ model = dict(
         num_heads=16,
         out_indices=out_indices),
     decode_head=dict(
+        img_size=img_size,
         in_channels=in_channels,
         channels=in_channels,
         embed_dims=in_channels // 2,
