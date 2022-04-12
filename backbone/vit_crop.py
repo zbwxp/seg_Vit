@@ -19,10 +19,10 @@ class vit_crop(VisionTransformer):
         cls_tokens = self.cls_token.expand(B, -1, -1)
         x = torch.cat((cls_tokens, x), dim=1)
         x = self._pos_embeding(x, hw_shape, self.pos_embed)
-        if self.training:
-            hw = x.size()[1]
-            rand_idx, _ = torch.randperm(hw-1)[:int(hw*self.crop_ratio)].sort()
-            x = x[:, rand_idx + 1]
+
+        hw = x.size()[1]
+        rand_idx, _ = torch.randperm(hw-1)[:int(hw*self.crop_ratio)].sort()
+        x = x[:, rand_idx + 1]
 
         outs = []
         for i, layer in enumerate(self.layers):
