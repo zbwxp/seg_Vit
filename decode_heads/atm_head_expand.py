@@ -210,25 +210,26 @@ class ATMHead_expand(BaseDecodeHead):
         for idx, (x_, proj_, norm_, decoder_, deconv_) in \
                 enumerate(zip(x, self.input_proj, self.proj_norm, self.decoder, self.deconv)):
             lateral = norm_(proj_(x_))
+            laterals.append(lateral)
+
             lateral = self.d3_to_d4(lateral)
             lateral = deconv_(lateral)
             lateral = self.d4_to_d3(lateral)
-
             laterals.append(lateral)
 
-
-            q, attn = decoder_(q, lateral.transpose(0, 1))
-            attn = attn.transpose(-1, -2)
-            if self.crop_train and self.training:
-                blank_attn = torch.zeros_like(attn)
-                blank_attn = blank_attn[:, 0].unsqueeze(1).repeat(1, (self.image_size//16)**2, 1)
-                blank_attn[:, inputs[-1]] = attn
-                attn = blank_attn
-                self.crop_idx = inputs[-1]
-            attn = self.d3_to_d4(attn)
-            maps_size.append(attn.size()[-2:])
-            qs.append(q.transpose(0, 1))
-            attns.append(attn)
+            for lateral_ in laterals:
+                q, attn = decoder_(q, lateral_.transpose(0, 1))
+                attn = attn.transpose(-1, -2)
+            # if self.crop_train and self.training:
+            #     blank_attn = torch.zeros_like(attn)
+            #     blank_attn = blank_attn[:, 0].unsqueeze(1).repeat(1, (self.image_size//16)**2, 1)
+            #     blank_attn[:, inputs[-1]] = attn
+            #     attn = blank_attn
+            #     self.crop_idx = inputs[-1]
+                attn = self.d3_to_d4(attn)
+                maps_size.append(attn.size()[-2:])
+                qs.append(q.transpose(0, 1))
+                attns.append(attn)
         qs = torch.stack(qs, dim=0)
         outputs_class = self.class_embed(qs)
         out = {"pred_logits": outputs_class[-1]}
