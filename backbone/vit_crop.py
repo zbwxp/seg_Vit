@@ -41,6 +41,6 @@ class vit_crop(VisionTransformer):
                 # out = out.reshape(B, hw_shape[0], hw_shape[1],
                 #                   C).permute(0, 3, 1, 2).contiguous()
                 outs.append(out)
-        if self.training:
-            outs.append(rand_idx)
+
+        outs.append(rand_idx)
         return tuple(outs)
