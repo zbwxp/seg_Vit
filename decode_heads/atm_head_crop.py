@@ -271,8 +271,8 @@ class ATMHead_crop(BaseDecodeHead):
             lateral = norm_(proj_(x_))
             laterals.append(lateral)
 
-            q, attn = decoder_(q, lateral.transpose(0, 1))
-            attn = attn.transpose(-1, -2)
+            # q, attn = decoder_(q, lateral.transpose(0, 1))
+            # attn = attn.transpose(-1, -2)
             # qs.append(q.transpose(0, 1))
             # attns.append(attn)
             # create blank attn
