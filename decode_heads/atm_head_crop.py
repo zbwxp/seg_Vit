@@ -200,7 +200,7 @@ class ATMHead_crop(BaseDecodeHead):
         proj_norm = []
         atm_decoders = []
         atm_decoders_full = []
-        attns = []
+        encoders = []
         for i in range(self.use_stages):
             # FC layer to change ch
             proj = nn.Linear(self.in_channels, dim)
@@ -222,16 +222,16 @@ class ATMHead_crop(BaseDecodeHead):
             self.add_module("decoder_full_{}".format(i + 1), decoder)
             atm_decoders_full.append(decoder)
 
-            attn = Attention(
-                dim, nhead, qkv_bias=True, attn_drop=0.1)
-            self.add_module("attn_{}".format(i + 1), attn)
-            attns.append(attn)
+            encoder_layer = nn.TransformerEncoderLayer(d_model=dim, nhead=nhead, dim_feedforward=dim * 4)
+            encoder = nn.TransformerEncoder(encoder_layer, num_layers)
+            self.add_module("encoder_{}".format(i + 1), encoder)
+            encoders.append(encoder)
 
         self.input_proj = input_proj
         self.proj_norm = proj_norm
         self.decoder = atm_decoders
         self.decoder_full = atm_decoders_full
-        self.attn = attns
+        self.encoder = encoders
         self.q = nn.Embedding(self.num_classes, dim)
 
         self.class_embed = nn.Linear(dim, self.num_classes + 1)
@@ -265,16 +265,16 @@ class ATMHead_crop(BaseDecodeHead):
         qs = []
         q = self.q.weight.repeat(bs, 1, 1).transpose(0, 1)
 
-        for idx, (x_, proj_, norm_, decoder_, decoder_full_, attn_) in \
+        for idx, (x_, proj_, norm_, decoder_, decoder_full_, encoder_) in \
                 enumerate(zip(x, self.input_proj, self.proj_norm,
-                              self.decoder, self.decoder_full, self.attn)):
+                              self.decoder, self.decoder_full, self.encoder)):
             lateral = norm_(proj_(x_))
             laterals.append(lateral)
 
-            # q, attn = decoder_(q, lateral.transpose(0, 1))
-            # attn = attn.transpose(-1, -2)
-            # qs.append(q.transpose(0, 1))
-            # attns.append(attn)
+            q, attn = decoder_(q, lateral.transpose(0, 1))
+            attn = attn.transpose(-1, -2)
+            qs.append(q.transpose(0, 1))
+            attns.append(attn)
             # create blank attn
 
             # fill new q
@@ -286,10 +286,10 @@ class ATMHead_crop(BaseDecodeHead):
             full_x = self.d4_to_d3(pos + x_)
 
             self.crop_idx = inputs[-1]
-            full_x, _ = attn_(full_x, full_x, full_x)
-            q_full, attn_full = decoder_full_(q, full_x)
+            full_x = encoder_(full_x)
+            q_full, attn_full = decoder_full_(q, full_x.transpose(0, 1))
             attn_full = attn_full.transpose(-1, -2)
-            # attn_full[:, self.crop_idx] += attn
+            attn_full[:, self.crop_idx] += attn
 
             attn = self.d3_to_d4(attn_full)
             maps_size.append(attn.size()[-2:])
