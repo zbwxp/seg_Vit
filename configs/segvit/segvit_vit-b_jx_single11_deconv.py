@@ -10,6 +10,6 @@ model = dict(
         type="ATMHead_expand",
         use_stages=len(out_indices),
         loss_decode=dict(
-            type='ATMLoss', num_classes=150, dec_layers=len(out_indices), loss_weight=1.0),
+            type='ATMLoss', num_classes=150, dec_layers=len(out_indices)+1, loss_weight=1.0),
     )
 )
