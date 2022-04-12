@@ -273,8 +273,8 @@ class ATMHead_crop(BaseDecodeHead):
 
             q, attn = decoder_(q, lateral.transpose(0, 1))
             attn = attn.transpose(-1, -2)
-            qs.append(q.transpose(0, 1))
-            attns.append(attn)
+            # qs.append(q.transpose(0, 1))
+            # attns.append(attn)
             # create blank attn
 
             # fill new q
@@ -289,7 +289,7 @@ class ATMHead_crop(BaseDecodeHead):
             full_x, _ = attn_(full_x, full_x, full_x)
             q_full, attn_full = decoder_full_(q, full_x)
             attn_full = attn_full.transpose(-1, -2)
-            attn_full[:, self.crop_idx] += attn
+            # attn_full[:, self.crop_idx] += attn
 
             attn = self.d3_to_d4(attn_full)
             maps_size.append(attn.size()[-2:])
