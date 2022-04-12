@@ -131,7 +131,7 @@ class MLP(nn.Module):
 
 
 @HEADS.register_module()
-class ATMHead(BaseDecodeHead):
+class ATMHead_expand(BaseDecodeHead):
     def __init__(
             self,
             img_size,
@@ -144,7 +144,7 @@ class ATMHead(BaseDecodeHead):
             crop_train=False,
             **kwargs,
     ):
-        super(ATMHead, self).__init__(
+        super(ATMHead_expand, self).__init__(
             in_channels=in_channels, **kwargs)
 
         self.image_size = img_size
@@ -155,6 +155,7 @@ class ATMHead(BaseDecodeHead):
         input_proj = []
         proj_norm = []
         atm_decoders = []
+        deconvs = []
         for i in range(self.use_stages):
             # FC layer to change ch
             proj = nn.Linear(self.in_channels, dim)
@@ -170,10 +171,14 @@ class ATMHead(BaseDecodeHead):
             decoder = TPN_Decoder(decoder_layer, num_layers)
             self.add_module("decoder_{}".format(i + 1), decoder)
             atm_decoders.append(decoder)
+            deconv = nn.ConvTranspose2d(embed_dims, embed_dims, kernel_size=2, stride=2)
+            self.add_module("deconv_{}".format(i + 1), deconv)
+            deconvs.append(deconv)
 
         self.input_proj = input_proj
         self.proj_norm = proj_norm
         self.decoder = atm_decoders
+        self.deconv = deconvs
         self.q = nn.Embedding(self.num_classes, dim)
 
         self.class_embed = nn.Linear(dim, self.num_classes + 1)
@@ -202,20 +207,15 @@ class ATMHead(BaseDecodeHead):
         qs = []
         q = self.q.weight.repeat(bs, 1, 1).transpose(0, 1)
 
-        for idx, (x_, proj_, norm_, decoder_) in enumerate(zip(x, self.input_proj, self.proj_norm, self.decoder)):
+        for idx, (x_, proj_, norm_, decoder_, deconv_) in \
+                enumerate(zip(x, self.input_proj, self.proj_norm, self.decoder, self.deconv)):
             lateral = norm_(proj_(x_))
-            # if idx == 0:
-            if True:
-                laterals.append(lateral)
-            else:
-                if laterals[idx - 1].size()[1] == lateral.size()[1]:
-                    laterals.append(lateral + laterals[idx - 1])
-                else:
-                    # nearest interpolate
-                    l_ = self.d3_to_d4(laterals[idx - 1])
-                    l_ = F.interpolate(l_, scale_factor=2, mode="nearest")
-                    l_ = self.d4_to_d3(l_)
-                    laterals.append(l_ + lateral)
+            lateral = self.d3_to_d4(lateral)
+            lateral = deconv_(lateral)
+            lateral = self.d4_to_d3(lateral)
+
+            laterals.append(lateral)
+
 
             q, attn = decoder_(q, lateral.transpose(0, 1))
             attn = attn.transpose(-1, -2)
