@@ -140,6 +140,7 @@ class ATMHead(BaseDecodeHead):
             num_layers=3,
             num_heads=8,
             use_stages=3,
+            use_proj=True,
             CE_loss=False,
             crop_train=False,
             **kwargs,
@@ -157,12 +158,18 @@ class ATMHead(BaseDecodeHead):
         atm_decoders = []
         for i in range(self.use_stages):
             # FC layer to change ch
-            proj = nn.Linear(self.in_channels, dim)
-            trunc_normal_(proj.weight, std=.02)
+            if use_proj:
+                proj = nn.Linear(self.in_channels, dim)
+                trunc_normal_(proj.weight, std=.02)
+            else:
+                proj = nn.Identity()
             self.add_module("input_proj_{}".format(i + 1), proj)
             input_proj.append(proj)
             # norm layer
-            norm = nn.LayerNorm(dim)
+            if use_proj:
+                norm = nn.LayerNorm(dim)
+            else:
+                norm = nn.Identity()
             self.add_module("proj_norm_{}".format(i + 1), norm)
             proj_norm.append(norm)
             # decoder layer
@@ -177,8 +184,6 @@ class ATMHead(BaseDecodeHead):
         self.q = nn.Embedding(self.num_classes, dim)
 
         self.class_embed = nn.Linear(dim, self.num_classes + 1)
-        mask_dim = self.num_classes
-        self.mask_embed = MLP(dim, dim, mask_dim, 3)
         self.CE_loss = CE_loss
         delattr(self, 'conv_seg')
 
