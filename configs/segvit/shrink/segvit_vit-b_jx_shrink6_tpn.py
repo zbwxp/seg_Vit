@@ -16,3 +16,4 @@ model = dict(
                          type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
     )
 )
+find_unused_parameters = False
