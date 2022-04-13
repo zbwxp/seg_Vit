@@ -140,7 +140,7 @@ class ATMHead_expand(BaseDecodeHead):
             num_layers=3,
             num_heads=8,
             use_stages=3,
-            CE_loss=False,
+            deconv_stages=2,
             **kwargs,
     ):
         super(ATMHead_expand, self).__init__(
@@ -148,7 +148,7 @@ class ATMHead_expand(BaseDecodeHead):
 
         self.image_size = img_size
         self.use_stages = use_stages
-        deconv_stages = self.use_stages - 1
+        deconv_stages = deconv_stages
         nhead = num_heads
         dim = embed_dims
         input_proj = []
@@ -211,7 +211,7 @@ class ATMHead_expand(BaseDecodeHead):
             lateral = norm_(proj_(x_))
             laterals.append(lateral)
 
-            if not torch.jit.isinstance(deconv_, nn.Identity):
+            if not isinstance(deconv_, nn.Identity):
                 lateral = self.d3_to_d4(lateral)
                 lateral = deconv_(lateral)
                 lateral = self.d4_to_d3(lateral)
