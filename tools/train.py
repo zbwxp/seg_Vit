@@ -18,7 +18,7 @@ from mmseg.apis import init_random_seed, set_random_seed, train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger, setup_multi_processes
-from decode_heads import atm_head, atm_head_expand, atm_head_crop
+from decode_heads import atm_head, atm_head_expand, atm_head_crop, tpn_head
 from losses import atm_loss
 from backbone import vit_shrink, vit_crop
 
@@ -52,7 +52,7 @@ def parse_args():
         default=0,
         help='id of gpu to use '
         '(only applicable to non-distributed training)')
-    parser.add_argument('--seed', type=int, default=None, help='random seed')
+    parser.add_argument('--seed', type=int, default=0, help='random seed')
     parser.add_argument(
         '--diff_seed',
         action='store_true',
