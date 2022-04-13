@@ -141,7 +141,6 @@ class ATMHead_expand(BaseDecodeHead):
             num_heads=8,
             use_stages=3,
             CE_loss=False,
-            crop_train=False,
             **kwargs,
     ):
         super(ATMHead_expand, self).__init__(
@@ -149,7 +148,7 @@ class ATMHead_expand(BaseDecodeHead):
 
         self.image_size = img_size
         self.use_stages = use_stages
-        self.crop_train = crop_train
+        deconv_stages = self.use_stages - 1
         nhead = num_heads
         dim = embed_dims
         input_proj = []
@@ -171,7 +170,10 @@ class ATMHead_expand(BaseDecodeHead):
             decoder = TPN_Decoder(decoder_layer, num_layers)
             self.add_module("decoder_{}".format(i + 1), decoder)
             atm_decoders.append(decoder)
-            deconv = nn.ConvTranspose2d(embed_dims, embed_dims, kernel_size=2, stride=2)
+            if i == deconv_stages:
+                deconv = nn.Identity()
+            else:
+                deconv = nn.ConvTranspose2d(embed_dims, embed_dims, kernel_size=2, stride=2)
             self.add_module("deconv_{}".format(i + 1), deconv)
             deconvs.append(deconv)
 
@@ -182,9 +184,6 @@ class ATMHead_expand(BaseDecodeHead):
         self.q = nn.Embedding(self.num_classes, dim)
 
         self.class_embed = nn.Linear(dim, self.num_classes + 1)
-        mask_dim = self.num_classes
-        self.mask_embed = MLP(dim, dim, mask_dim, 3)
-        self.CE_loss = CE_loss
         delattr(self, 'conv_seg')
 
     def init_weights(self):
@@ -201,7 +200,6 @@ class ATMHead_expand(BaseDecodeHead):
         x.reverse()
         bs = x[0].size()[0]
 
-        laterals = []
         attns = []
         maps_size = []
         qs = []
@@ -209,23 +207,19 @@ class ATMHead_expand(BaseDecodeHead):
 
         for idx, (x_, proj_, norm_, decoder_, deconv_) in \
                 enumerate(zip(x, self.input_proj, self.proj_norm, self.decoder, self.deconv)):
+            laterals = []
             lateral = norm_(proj_(x_))
             laterals.append(lateral)
 
-            lateral = self.d3_to_d4(lateral)
-            lateral = deconv_(lateral)
-            lateral = self.d4_to_d3(lateral)
-            laterals.append(lateral)
+            if not torch.jit.isinstance(deconv_, nn.Identity):
+                lateral = self.d3_to_d4(lateral)
+                lateral = deconv_(lateral)
+                lateral = self.d4_to_d3(lateral)
+                laterals.append(lateral)
 
             for lateral_ in laterals:
                 q, attn = decoder_(q, lateral_.transpose(0, 1))
                 attn = attn.transpose(-1, -2)
-            # if self.crop_train and self.training:
-            #     blank_attn = torch.zeros_like(attn)
-            #     blank_attn = blank_attn[:, 0].unsqueeze(1).repeat(1, (self.image_size//16)**2, 1)
-            #     blank_attn[:, inputs[-1]] = attn
-            #     attn = blank_attn
-            #     self.crop_idx = inputs[-1]
                 attn = self.d3_to_d4(attn)
                 maps_size.append(attn.size()[-2:])
                 qs.append(q.transpose(0, 1))
@@ -290,21 +284,9 @@ class ATMHead_expand(BaseDecodeHead):
     @force_fp32(apply_to=('seg_logit',))
     def losses(self, seg_logit, seg_label):
         """Compute segmentation loss."""
-        if self.CE_loss:
-            return super().losses(seg_logit["pred"], seg_label)
-
         if isinstance(seg_logit, dict):
             # atm loss
             seg_label = seg_label.squeeze(1)
-            if self.crop_train:
-                # mask seg_label by crop_idx
-                bs, h, w = seg_label.size()
-                mask_label = seg_label.reshape(bs, h//16, 16, w//16, 16)\
-                    .permute(0, 1, 3, 2, 4).reshape(bs, h*w//256, 256)
-                empty_label = torch.zeros_like(mask_label) + self.ignore_index
-                empty_label[:, self.crop_idx] = mask_label[:, self.crop_idx]
-                seg_label = empty_label.reshape(bs, h//16, w//16, 16, 16)\
-                    .permute(0, 1, 3, 2, 4).reshape(bs, h, w)
             loss = self.loss_decode(
                 seg_logit,
                 seg_label,
