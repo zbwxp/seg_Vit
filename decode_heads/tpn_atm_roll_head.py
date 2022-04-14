@@ -96,7 +96,7 @@ class TPNATMROLLHead(BaseDecodeHead):
             laterals.append(q.transpose(0, 1))
 
         # q = self.d3_to_d4(q.transpose(0, 1))
-
+        laterals.reverse()
         atm_out = self.atm(laterals)
         # if not self.training:
         #     return atm_out
