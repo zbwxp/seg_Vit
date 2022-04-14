@@ -23,6 +23,7 @@ class TPNATMROLLHead(BaseDecodeHead):
             num_layers=3,
             num_heads=8,
             use_stages=3,
+            reverse=False,
             **kwargs,
     ):
         super(TPNATMROLLHead, self).__init__(
@@ -30,7 +31,7 @@ class TPNATMROLLHead(BaseDecodeHead):
         dim = embed_dims
         self.use_stages = use_stages
         self.image_size = img_size
-
+        self.reverse = reverse
         proj_norm = []
         input_proj = []
         tpn_layers = []
@@ -96,7 +97,8 @@ class TPNATMROLLHead(BaseDecodeHead):
             laterals.append(q.transpose(0, 1))
 
         # q = self.d3_to_d4(q.transpose(0, 1))
-        laterals.reverse()
+        if self.reverse:
+            laterals.reverse()
         atm_out = self.atm(laterals)
         # if not self.training:
         #     return atm_out
