@@ -56,9 +56,9 @@ class TPNATMROLLHead(BaseDecodeHead):
         self.q = nn.Embedding((self.image_size // 16)**2, dim)
 
         delattr(self, 'conv_seg')
-        self.conv_0 = nn.Conv2d(dim, 256, 1, 1)
-        self.conv_1 = nn.Conv2d(256, self.num_classes, 1, 1)
-        _, self.syncbn_fc_0 = build_norm_layer(dict(type='SyncBN', requires_grad=True), 256)
+        # self.conv_0 = nn.Conv2d(dim, 256, 1, 1)
+        # self.conv_1 = nn.Conv2d(256, self.num_classes, 1, 1)
+        # _, self.syncbn_fc_0 = build_norm_layer(dict(type='SyncBN', requires_grad=True), 256)
 
         # atm
         self.atm = ATMHead(img_size,
