@@ -4,4 +4,7 @@ _base_ = [
 checkpoint = './pretrained/vit_base_p16_mae.pth'
 model = dict(
     pretrained=checkpoint,
+    backbone=dict(
+        type="vit_fixpos",
+    )
 )
