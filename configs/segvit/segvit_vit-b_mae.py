@@ -8,3 +8,4 @@ model = dict(
         type="vit_fixpos",
     )
 )
+find_unused_parameters=True
