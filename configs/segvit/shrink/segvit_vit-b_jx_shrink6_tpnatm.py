@@ -13,7 +13,7 @@ model = dict(
         num_layers=3,
         use_stages=len(out_indices),
         loss_decode=dict(
-            type='ATMLoss', num_classes=150, dec_layers=1, loss_weight=1.0),
+            type='ATMLoss', num_classes=150, dec_layers=3, loss_weight=1.0),
     )
 )
 find_unused_parameters = False

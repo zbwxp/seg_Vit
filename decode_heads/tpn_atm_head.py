@@ -7,7 +7,7 @@ from mmcv.cnn import build_norm_layer
 from mmseg.models.builder import HEADS
 from mmseg.models.decode_heads.decode_head import BaseDecodeHead
 
-from .atm_head import ATMHead
+from .atm_single_head import ATMSingleHead
 from .atm_head import trunc_normal_, constant_init, trunc_normal_init
 from mmcv.runner import auto_fp16, force_fp32
 from mmseg.models.losses import accuracy, cross_entropy
@@ -56,12 +56,12 @@ class TPNATMHead(BaseDecodeHead):
         self.q = nn.Embedding((self.image_size // 16)**2, dim)
 
         delattr(self, 'conv_seg')
-        self.conv_0 = nn.Conv2d(dim, 256, 1, 1)
-        self.conv_1 = nn.Conv2d(256, self.num_classes, 1, 1)
-        _, self.syncbn_fc_0 = build_norm_layer(dict(type='SyncBN', requires_grad=True), 256)
+        # self.conv_0 = nn.Conv2d(dim, 256, 1, 1)
+        # self.conv_1 = nn.Conv2d(256, self.num_classes, 1, 1)
+        # _, self.syncbn_fc_0 = build_norm_layer(dict(type='SyncBN', requires_grad=True), 256)
 
         # atm
-        self.atm = ATMHead(img_size,
+        self.atm = ATMSingleHead(img_size,
                            in_channels,
                            embed_dims,
                            num_layers,
@@ -99,9 +99,9 @@ class TPNATMHead(BaseDecodeHead):
         atm_out = self.atm([q])
         if not self.training:
             return atm_out
-        out = self.gen_output(q)
+        # out = self.gen_output(q)
 
-        atm_out.update({"ce_aux": out})
+        # atm_out.update({"ce_aux": out})
 
         return atm_out
 
@@ -130,7 +130,8 @@ class TPNATMHead(BaseDecodeHead):
     def losses(self, seg_logit, seg_label):
         # atm loss
         seg_label = seg_label.squeeze(1)
-        aux = seg_logit.pop('ce_aux')
+        # aux = seg_logit.pop('ce_aux')
+        aux = None
         loss = self.loss_decode(
             seg_logit,
             seg_label,
