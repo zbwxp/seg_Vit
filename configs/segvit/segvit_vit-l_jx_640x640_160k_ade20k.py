@@ -6,13 +6,14 @@ _base_ = [
 in_channels = 1024
 img_size = 640
 checkpoint = './pretrained/vit_large_p16_jx.pth'
-out_indices = [5, 11, 17, 23]
+out_indices = [7, 15, 23]
 model = dict(
     pretrained=checkpoint,
     backbone=dict(
         img_size=(640, 640),
         embed_dims=1024,
         num_layers=24,
+        drop_path_rate=0.3,
         num_heads=16,
         out_indices=out_indices),
     decode_head=dict(
@@ -30,7 +31,7 @@ model = dict(
 
 data = dict(samples_per_gpu=2,)
 
-optimizer = dict(_delete_=True, type='AdamW', lr=0.00006, betas=(0.9, 0.999), weight_decay=0.01,
+optimizer = dict(_delete_=True, type='AdamW', lr=0.00002, betas=(0.9, 0.999), weight_decay=0.01,
                  paramwise_cfg=dict(custom_keys={'norm': dict(decay_mult=0.),
                                                  'ln': dict(decay_mult=0.),
                                                  'head': dict(lr_mult=10.),
