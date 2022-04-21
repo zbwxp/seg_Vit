@@ -1,7 +1,7 @@
 _base_ = [
     '../segvit_vit-l_jax.py'
 ]
-out_indices = [7, 11]
+out_indices = [7, 23]
 model = dict(
     backbone=dict(
         type='vit_shrink',
