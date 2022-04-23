@@ -12,7 +12,5 @@ model = dict(
         type="TPNATMHead",
         num_layers=3,
         use_stages=len(out_indices),
-        loss_decode=dict(
-            type='ATMLoss', num_classes=150, dec_layers=3, loss_weight=1.0),
     )
 )
