@@ -282,7 +282,7 @@ class ATMSingleHead(BaseDecodeHead):
 
     def d3_to_d4(self, t):
         n, hw, c = t.size()
-        if hw % 32 != 0:
+        if hw % 2 != 0:
             t = t[:, 1:]
         h = w = int(math.sqrt(hw))
         return t.transpose(1, 2).reshape(n, c, h, w)
