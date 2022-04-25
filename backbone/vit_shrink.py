@@ -111,7 +111,7 @@ class vit_shrink(VisionTransformer):
         for i, layer in enumerate(self.layers):
             if i == self.shrink_idx:
                 n, hw, c = x.shape
-                if hw % 32 != 0:
+                if hw % 2 != 0:
                     x = x[:, 1:]
                 h = w = int(math.sqrt(hw))
                 x_ = x.transpose(1, 2).reshape(n, c, h, w)
