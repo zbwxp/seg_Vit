@@ -1,6 +1,6 @@
 _base_ = [
     '../_base_/models/seg_vit-b16.py',
-    '../_base_/datasets/coco-stuff10k.py', '../_base_/default_runtime.py',
+    '../_base_/datasets/pascal_context.py', '../_base_/default_runtime.py',
     '../_base_/schedules/schedule_80k.py'
 ]
 in_channels = 1024
