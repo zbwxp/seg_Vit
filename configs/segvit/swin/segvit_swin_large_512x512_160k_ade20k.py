@@ -1,10 +1,10 @@
 _base_ = [
     '../../_base_/models/seg_swin-tiny.py',
-    '../../_base_/datasets/ade20k_640x640.py', '../../_base_/default_runtime.py',
+    '../../_base_/datasets/ade20k.py', '../../_base_/default_runtime.py',
     '../../_base_/schedules/schedule_160k.py'
 ]
 checkpoint = './pretrained/swin_large.pth'
-img_size = 640
+img_size = 512
 model = dict(
     pretrained=checkpoint,
     backbone=dict(
@@ -21,6 +21,6 @@ model = dict(
         img_size=img_size,
         num_layers=2,
     ),
-    test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(608, 608)),
+    test_cfg=dict(mode='slide', crop_size=(512, 512), stride=(341, 341)),
 )
 data = dict(samples_per_gpu=2,)
