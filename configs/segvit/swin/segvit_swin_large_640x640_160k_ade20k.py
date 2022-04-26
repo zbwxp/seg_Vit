@@ -19,7 +19,7 @@ model = dict(
     ),
     decode_head=dict(
         img_size=img_size,
-        num_layers=2,
+        num_layers=3,
     ),
     test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(608, 608)),
 )
@@ -38,3 +38,4 @@ lr_config = dict(_delete_=True, policy='poly',
                  warmup_iters=1500,
                  warmup_ratio=1e-6,
                  power=1.0, min_lr=0.0, by_epoch=False)
+find_unused_parameters = False
