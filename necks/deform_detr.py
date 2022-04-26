@@ -7,9 +7,8 @@ from mmcv.runner import BaseModule, auto_fp16
 
 from mmseg.ops import resize
 from mmseg.models.builder import NECKS
-from mmseg.models.necks import FPN
-from .transformer import build_transformer
 import math
+from .msdeformattn import MSDeformAttnTransformerEncoderOnly
 
 
 class PositionEmbeddingSine(nn.Module):
@@ -87,7 +86,15 @@ class Deformable_DETR(BaseModule):
         N_steps = out_channels // 2
         self.pe_layer = PositionEmbeddingSine(N_steps, normalize=True)
 
-        self.transformer = build_transformer(transformer)
+        self.transformer = MSDeformAttnTransformerEncoderOnly(
+            d_model=out_channels,
+            dropout=0.0,
+            nhead=8,
+            dim_feedforward=1024,
+            num_encoder_layers=6,
+            num_feature_levels=3,
+        )
+
         # this is the input shape of transformer encoder (could use less features than pixel decoder
         transformer_in_channels = self.in_channels
         self.transformer_feature_strides = [8, 16, 32]
@@ -124,8 +131,7 @@ class Deformable_DETR(BaseModule):
             src = self.input_proj[idx](f)
             srcs.append(src)
             pos.append(self.pe_layer(f))
-            mask.append(torch.zeros_like(src)[:, 0].bool())
-        y, spatial_shapes, level_start_index = self.transformer(srcs, mask, pos)
+        y, spatial_shapes, level_start_index = self.transformer(srcs, pos)
 
         split_size_or_sections = [None] * self.transformer_num_feature_levels
         for i in range(self.transformer_num_feature_levels):
