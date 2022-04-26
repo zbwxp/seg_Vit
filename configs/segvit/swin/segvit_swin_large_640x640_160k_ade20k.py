@@ -23,4 +23,4 @@ model = dict(
     ),
     test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(608, 608)),
 )
-data = dict(samples_per_gpu=1,)
+data = dict(samples_per_gpu=2,)
