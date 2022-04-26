@@ -23,6 +23,8 @@ class TPNATMHead(BaseDecodeHead):
             num_layers=3,
             num_heads=8,
             use_stages=3,
+            shrink_ratio=16,
+            use_proj=True,
             **kwargs,
     ):
         super(TPNATMHead, self).__init__(
@@ -36,12 +38,18 @@ class TPNATMHead(BaseDecodeHead):
         tpn_layers = []
         for i in range(self.use_stages):
             # FC layer to change ch
-            proj = nn.Linear(self.in_channels, dim)
-            trunc_normal_(proj.weight, std=.02)
+            if use_proj:
+                proj = nn.Linear(self.in_channels, dim)
+                trunc_normal_(proj.weight, std=.02)
+            else:
+                proj = nn.Identity()
             self.add_module("input_proj_{}".format(i + 1), proj)
             input_proj.append(proj)
             # norm layer
-            norm = nn.LayerNorm(dim)
+            if use_proj:
+                norm = nn.LayerNorm(dim)
+            else:
+                norm = nn.Identity()
             self.add_module("proj_norm_{}".format(i + 1), norm)
             proj_norm.append(norm)
             # decoder layer
@@ -53,7 +61,7 @@ class TPNATMHead(BaseDecodeHead):
         self.input_proj = input_proj
         self.proj_norm = proj_norm
         self.decoder = tpn_layers
-        self.q = nn.Embedding((self.image_size // 16)**2, dim)
+        self.q = nn.Embedding((self.image_size // shrink_ratio)**2, dim)
 
         delattr(self, 'conv_seg')
         # self.conv_0 = nn.Conv2d(dim, 256, 1, 1)

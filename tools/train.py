@@ -22,6 +22,7 @@ from decode_heads import atm_head, atm_head_expand, atm_head_crop, tpn_head, tpn
 from decode_heads import atm_head_cycle, mask_head, atm_head_accum, atm_head_conv
 from losses import atm_loss
 from backbone import vit_shrink, vit_crop, vit_fix_pos
+from necks import deform_detr, transformer
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
