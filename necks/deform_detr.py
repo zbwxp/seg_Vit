@@ -9,7 +9,7 @@ from mmseg.ops import resize
 from mmseg.models.builder import NECKS
 import math
 from .msdeformattn import MSDeformAttnTransformerEncoderOnly
-
+from torch.cuda.amp import autocast
 
 class PositionEmbeddingSine(nn.Module):
     """
@@ -120,7 +120,7 @@ class Deformable_DETR(BaseModule):
             nn.init.xavier_uniform_(proj[0].weight, gain=1)
             nn.init.constant_(proj[0].bias, 0)
 
-    @auto_fp16()
+    @autocast(enabled=False)
     def forward(self, inputs):
         assert len(inputs) == len(self.in_channels)
         srcs = []
