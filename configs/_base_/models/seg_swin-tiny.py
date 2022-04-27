@@ -46,7 +46,7 @@ model = dict(
         ),
     ),
     decode_head=dict(
-        type="TPNATMHead",
+        type="TPNATMHead_swin",
         img_size=img_size,
         in_channels=256,
         channels=in_channels,
