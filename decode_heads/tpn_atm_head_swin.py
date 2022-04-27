@@ -62,9 +62,9 @@ class TPNATMHead_swin(BaseDecodeHead):
         self.input_proj = input_proj
         self.proj_norm = proj_norm
         self.decoder = tpn_layers
-        self.q = nn.Embedding((self.image_size // shrink_ratio)**2, dim)
+        self.q = nn.Embedding((self.image_size // shrink_ratio) ** 2, dim)
         if shrink_ratio == 8:
-            self.shrink=True
+            self.shrink = True
 
         delattr(self, 'conv_seg')
         # self.conv_0 = nn.Conv2d(dim, 256, 1, 1)
@@ -73,14 +73,14 @@ class TPNATMHead_swin(BaseDecodeHead):
 
         # atm
         self.atm = ATMSingleHead(img_size,
-                           in_channels,
-                           embed_dims,
-                           num_layers,
-                           num_heads,
-                           use_stages=1,
-                           use_proj=False,
-                           **kwargs
-                           )
+                                 in_channels,
+                                 embed_dims,
+                                 num_layers,
+                                 num_heads,
+                                 use_stages=1,
+                                 use_proj=False,
+                                 **kwargs
+                                 )
 
     def init_weights(self):
         for n, m in self.named_modules():
@@ -100,21 +100,20 @@ class TPNATMHead_swin(BaseDecodeHead):
 
         q = self.q.weight.repeat(bs, 1, 1).transpose(0, 1)
         if self.shrink:
-            dim = q.shape[-1]
-            q = q.reshape(-1, bs*4, dim)
+            q = self.shrink_4(self.bs_first(q, bs)).transpose(0, 1)
 
         for idx, (x_, proj_, norm_, decoder_) in \
                 enumerate(zip(x, self.input_proj, self.proj_norm, self.decoder)):
             lateral = norm_(proj_(x_))
             if self.shrink and idx == 0:
-                lateral = lateral.reshape(bs*4, -1, dim)
+                lateral = self.shrink_4(lateral)
             else:
                 lateral = lateral.repeat(4, 1, 1)
 
             q = decoder_(q, lateral.transpose(0, 1))
 
         if self.shrink:
-            q = q.reshape(-1, bs, dim)
+            q = self.reverse_shrink(self.bs_first(q, bs)).transpose(0, 1)
         q = self.d3_to_d4(q.transpose(0, 1))
 
         atm_out = self.atm([q])
@@ -126,6 +125,26 @@ class TPNATMHead_swin(BaseDecodeHead):
 
         return atm_out
 
+    def reverse_shrink(self, t):
+        t = self.d3_to_d4(t)
+        bs4, ch, h, w = t.shape
+        bs = bs4 // 4
+        t = t.reshape(bs, 2, 2, ch, h, w).permute(0, 1, 4, 2, 5, 3).reshape(bs, 2*h, 2*w, ch).reshape(bs, -1, ch)
+        return t
+
+    def bs_first(self, t, bs):
+        a, b, c = t.shape
+        if a == bs:
+            return t
+        else:
+            return t.transpose(0, 1)
+
+    # input need bs first
+    def shrink_4(self, t):
+        t = self.d3_to_d4(t)
+        bs, ch, h, w = t.shape
+        t = t.reshape(bs, ch, 2, h // 2, 2, w // 2).permute(0, 2, 4, 3, 5, 1).reshape(bs * 4, -1, ch)
+        return t
 
     def d3_to_d4(self, t):
         n, hw, c = t.size()
