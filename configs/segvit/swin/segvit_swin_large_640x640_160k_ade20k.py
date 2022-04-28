@@ -21,6 +21,8 @@ model = dict(
     decode_head=dict(
         type="ATMHead",
         img_size=img_size,
+        in_channels=384,
+        embed_dims=384,
         num_layers=3,
         use_proj=False,
     ),
