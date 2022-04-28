@@ -71,7 +71,7 @@ class Deformable_DETR(BaseModule):
     def __init__(self,
                  in_channels,
                  num_outs,
-                 transformer,
+                 transformer=None,
                  out_channels=256,
                  start_level=0,
                  end_level=-1,

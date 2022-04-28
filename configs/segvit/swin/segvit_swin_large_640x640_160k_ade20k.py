@@ -16,10 +16,13 @@ model = dict(
     ),
     neck=dict(
         in_channels=[384, 768, 1536],
+        out_channels=384,
     ),
     decode_head=dict(
+        type="ATMHead",
         img_size=img_size,
         num_layers=3,
+        use_proj=False,
     ),
     test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(608, 608)),
 )

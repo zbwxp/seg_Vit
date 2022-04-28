@@ -30,20 +30,6 @@ model = dict(
         type='Deformable_DETR',
         in_channels=[192, 384, 768],
         num_outs=3,
-        transformer=dict(
-            type='DeformableDetrTransformer',
-            num_feature_levels=3,
-            encoder=dict(
-                type='DetrTransformerEncoder',
-                num_layers=6,
-                transformerlayers=dict(
-                    type='BaseTransformerLayer',
-                    attn_cfgs=dict(
-                        type='MultiScaleDeformableAttention', embed_dims=256, num_levels=3,),
-                    feedforward_channels=1024,
-                    ffn_dropout=0.0,
-                    operation_order=('self_attn', 'norm', 'ffn', 'norm'))),
-        ),
     ),
     decode_head=dict(
         type="TPNATMHead_swin",

@@ -143,6 +143,7 @@ class ATMHead(BaseDecodeHead):
             use_proj=True,
             CE_loss=False,
             crop_train=False,
+            shrink_ratio=None,
             **kwargs,
     ):
         super(ATMHead, self).__init__(
