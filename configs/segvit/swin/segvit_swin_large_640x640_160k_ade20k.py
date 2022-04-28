@@ -19,7 +19,7 @@ model = dict(
         out_channels=384,
     ),
     decode_head=dict(
-        type="ATMHead",
+        type="ATMHead_masked",
         img_size=img_size,
         in_channels=384,
         embed_dims=384,
