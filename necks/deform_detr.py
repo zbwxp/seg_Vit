@@ -73,6 +73,7 @@ class Deformable_DETR(BaseModule):
                  num_outs,
                  transformer=None,
                  out_channels=256,
+                 nhead=8,
                  start_level=0,
                  end_level=-1,
                  init_cfg=dict(type='Xavier', layer='Conv2d', distribution='uniform'),
@@ -89,7 +90,7 @@ class Deformable_DETR(BaseModule):
         self.transformer = MSDeformAttnTransformerEncoderOnly(
             d_model=out_channels,
             dropout=0.0,
-            nhead=8,
+            nhead=nhead,
             dim_feedforward=1024,
             num_encoder_layers=6,
             num_feature_levels=3,

@@ -17,6 +17,7 @@ model = dict(
     neck=dict(
         in_channels=[384, 768, 1536],
         out_channels=384,
+        nhead=12,
     ),
     decode_head=dict(
         type="ATMHead",
