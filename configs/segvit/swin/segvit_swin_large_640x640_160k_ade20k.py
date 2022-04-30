@@ -30,7 +30,7 @@ model = dict(
     test_cfg=dict(mode='slide', crop_size=(640, 640), stride=(608, 608)),
 )
 data = dict(samples_per_gpu=4,)
-optimizer = dict(_delete_=True, type='AdamW', lr=0.00002, betas=(0.9, 0.999), weight_decay=0.01,
+optimizer = dict(_delete_=True, type='AdamW', lr=0.00006, betas=(0.9, 0.999), weight_decay=0.01,
                  paramwise_cfg=dict(custom_keys={'norm': dict(decay_mult=0.),
                                                  'linear': dict(decay_mult=0.),
                                                  'head': dict(lr_mult=10.),
