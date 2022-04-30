@@ -44,4 +44,4 @@ lr_config = dict(
 # mixed precision
 fp16 = dict(loss_scale='dynamic')
 
-find_unused_parameters=True
+# find_unused_parameters=True
