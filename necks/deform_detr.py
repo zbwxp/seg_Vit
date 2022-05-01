@@ -71,7 +71,7 @@ class Deformable_DETR(BaseModule):
     def __init__(self,
                  in_channels,
                  num_outs,
-                 transformer=None,
+                 transformer=True,
                  out_channels=256,
                  nhead=8,
                  start_level=0,
@@ -84,17 +84,20 @@ class Deformable_DETR(BaseModule):
         self.out_channels = out_channels
         self.num_ins = len(in_channels)
         self.num_outs = num_outs
-        N_steps = out_channels // 2
-        self.pe_layer = PositionEmbeddingSine(N_steps, normalize=True)
 
-        self.transformer = MSDeformAttnTransformerEncoderOnly(
-            d_model=out_channels,
-            dropout=0.0,
-            nhead=nhead,
-            dim_feedforward=1024,
-            num_encoder_layers=6,
-            num_feature_levels=3,
-        )
+        self.use_transformer = transformer
+        if self.use_transformer:
+            N_steps = out_channels // 2
+            self.pe_layer = PositionEmbeddingSine(N_steps, normalize=True)
+
+            self.transformer = MSDeformAttnTransformerEncoderOnly(
+                d_model=out_channels,
+                dropout=0.0,
+                nhead=nhead,
+                dim_feedforward=1024,
+                num_encoder_layers=6,
+                num_feature_levels=3,
+            )
 
         # this is the input shape of transformer encoder (could use less features than pixel decoder
         transformer_in_channels = self.in_channels
@@ -131,15 +134,19 @@ class Deformable_DETR(BaseModule):
         for idx, f in enumerate(inputs): # deformable detr does not support half precision
             src = self.input_proj[idx](f)
             srcs.append(src)
-            pos.append(self.pe_layer(f))
-        y, spatial_shapes, level_start_index = self.transformer(srcs, pos)
+            if self.use_transformer:
+                pos.append(self.pe_layer(f))
+        if not self.use_transformer:
+            return srcs
+        else:
+            y, spatial_shapes, level_start_index = self.transformer(srcs, pos)
 
-        split_size_or_sections = [None] * self.transformer_num_feature_levels
-        for i in range(self.transformer_num_feature_levels):
-            if i < self.transformer_num_feature_levels - 1:
-                split_size_or_sections[i] = level_start_index[i + 1] - level_start_index[i]
-            else:
-                split_size_or_sections[i] = y.shape[1] - level_start_index[i]
-        y = torch.split(y, split_size_or_sections, dim=1)
+            split_size_or_sections = [None] * self.transformer_num_feature_levels
+            for i in range(self.transformer_num_feature_levels):
+                if i < self.transformer_num_feature_levels - 1:
+                    split_size_or_sections[i] = level_start_index[i + 1] - level_start_index[i]
+                else:
+                    split_size_or_sections[i] = y.shape[1] - level_start_index[i]
+            y = torch.split(y, split_size_or_sections, dim=1)
 
-        return y
+            return y
