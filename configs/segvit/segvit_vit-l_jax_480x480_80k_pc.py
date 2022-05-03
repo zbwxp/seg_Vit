@@ -80,9 +80,9 @@ optimizer = dict(_delete_=True, type='AdamW', lr=0.00002, betas=(0.9, 0.999), we
 optimizer_config = dict(
     _delete_=True, grad_clip=dict(max_norm=35, norm_type=2))
 
-lr_config = dict(_delete_=True, policy='step',
+lr_config = dict(_delete_=True, policy='poly',
                  warmup='linear',
                  warmup_iters=1500,
                  warmup_ratio=1e-6,
-                 step=[20000, 40000, 60000], min_lr=0.0, by_epoch=False)
+                 power=2.0, min_lr=0.0, by_epoch=False)
 
