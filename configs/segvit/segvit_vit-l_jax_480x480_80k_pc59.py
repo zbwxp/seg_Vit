@@ -22,7 +22,7 @@ model = dict(
         channels=in_channels,
         embed_dims=in_channels // 2,
         num_heads=16,
-        num_classes=60,
+        num_classes=59,
         use_stages=len(out_indices),
         loss_decode=dict(
             type='ATMLoss', num_classes=59, dec_layers=len(out_indices), loss_weight=1.0),
