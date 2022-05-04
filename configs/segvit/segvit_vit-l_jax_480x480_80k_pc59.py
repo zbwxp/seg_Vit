@@ -25,7 +25,7 @@ model = dict(
         num_classes=60,
         use_stages=len(out_indices),
         loss_decode=dict(
-            type='ATMLoss', num_classes=60, dec_layers=len(out_indices), loss_weight=1.0),
+            type='ATMLoss', num_classes=59, dec_layers=len(out_indices), loss_weight=1.0),
     ),
     test_cfg=dict(mode='slide', crop_size=(480, 480), stride=(320, 320)),
 )
