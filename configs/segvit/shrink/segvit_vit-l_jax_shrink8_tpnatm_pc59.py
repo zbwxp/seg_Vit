@@ -14,4 +14,4 @@ model = dict(
         use_stages=len(out_indices),
     )
 )
-data = dict(samples_per_gpu=2,)
+# data = dict(samples_per_gpu=2,)
