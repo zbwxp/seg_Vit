@@ -86,3 +86,4 @@ lr_config = dict(_delete_=True, policy='poly',
                  warmup_ratio=1e-6,
                  power=2.0, min_lr=0.0, by_epoch=False)
 
+find_unused_parameters = False
