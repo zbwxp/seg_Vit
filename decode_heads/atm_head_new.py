@@ -244,7 +244,7 @@ class ATMHead_new(BaseDecodeHead):
         # avoid negtive factor
         factor = F.softmax(factor, dim=1)
         self._iter += 1.0
-        if self._iter % 1000 == 0:
+        if self._iter % 10000 == 0:
             print(factor)
 
         out = {"pred_logits": (outputs_class * factor.transpose(0, 1)[..., None]).sum(0)}
