@@ -189,7 +189,7 @@ class ATMHead_new(BaseDecodeHead):
         delattr(self, 'conv_seg')
         self.perlevelfactor = nn.Embedding(self.use_stages, self.num_classes)
         nn.init.constant_(self.perlevelfactor.weight, 1.0/self.use_stages)
-        print()
+        self._iter = 0
 
     def init_weights(self):
         for n, m in self.named_modules():
@@ -241,6 +241,11 @@ class ATMHead_new(BaseDecodeHead):
         qs = torch.stack(qs, dim=0)
         outputs_class = self.class_embed(qs)
         factor = self.perlevelfactor.weight.repeat(bs, 1, 1)
+        # avoid negtive factor
+        factor = F.softmax(factor / 10.0, dim=1)
+        self._iter += 1.0
+        if self._iter % 1000 == 0:
+            print(factor)
 
         out = {"pred_logits": (outputs_class * factor.transpose(0, 1)[..., None]).sum(0)}
         outputs_class = torch.cat((outputs_class, out["pred_logits"].unsqueeze(0)), dim=0)
