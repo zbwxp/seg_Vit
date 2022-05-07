@@ -242,7 +242,7 @@ class ATMHead_new(BaseDecodeHead):
         outputs_class = self.class_embed(qs)
         factor = self.perlevelfactor.weight.repeat(bs, 1, 1)
         # avoid negtive factor
-        factor = F.softmax(factor / 10.0, dim=1)
+        factor = F.softmax(factor, dim=1)
         self._iter += 1.0
         if self._iter % 1000 == 0:
             print(factor)
