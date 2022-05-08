@@ -241,11 +241,11 @@ class ATMHead_new(BaseDecodeHead):
         qs = torch.stack(qs, dim=0)
         outputs_class = self.class_embed(qs)
         factor = self.perlevelfactor.weight.repeat(bs, 1, 1)
+        self._iter += 1.0
+        if self._iter % 3000 == 0:
+            print(factor)
         # avoid negtive factor
         factor = F.softmax(factor, dim=1)
-        self._iter += 1.0
-        if self._iter % 10000 == 0:
-            print(factor)
 
         out = {"pred_logits": (outputs_class * factor.transpose(0, 1)[..., None]).sum(0)}
         outputs_class = torch.cat((outputs_class, out["pred_logits"].unsqueeze(0)), dim=0)
@@ -257,12 +257,12 @@ class ATMHead_new(BaseDecodeHead):
         for i_attn, attn in enumerate(attns):
             # if i_attn == 0:
             outputs_seg_masks.append(F.interpolate(attn, size=size, mode='bilinear', align_corners=False))
-            res += outputs_seg_masks[-1].sigmoid() * factor[:, i_attn][..., None, None]
+            res += outputs_seg_masks[-1] * factor[:, i_attn][..., None, None]
 
             # else:
             #     outputs_seg_masks.append(outputs_seg_masks[i_attn - 1] +
             #                              F.interpolate(attn, size=size, mode='bilinear', align_corners=False))
-        outputs_seg_masks.append(res.logit())
+        outputs_seg_masks.append(res)
 
         out["pred_masks"] = F.interpolate(res,
                                           size=(self.image_size, self.image_size),
@@ -293,7 +293,7 @@ class ATMHead_new(BaseDecodeHead):
 
     def semantic_inference(self, mask_cls, mask_pred):
         mask_cls = F.softmax(mask_cls, dim=-1)[..., :-1]
-        mask_pred = mask_pred
+        mask_pred = mask_pred.sigmoid()
         semseg = torch.einsum("bqc,bqhw->bchw", mask_cls, mask_pred)
         return semseg
 
