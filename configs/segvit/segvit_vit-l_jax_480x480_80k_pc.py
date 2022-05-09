@@ -82,7 +82,7 @@ optimizer_config = dict(
 
 lr_config = dict(_delete_=True, policy='poly',
                  warmup='linear',
-                 warmup_iters=4000,
+                 warmup_iters=100,
                  warmup_ratio=1e-6,
                  power=2.0, min_lr=0.0, by_epoch=False)
 
