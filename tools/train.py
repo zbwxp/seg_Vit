@@ -22,8 +22,8 @@ from decode_heads import atm_head, atm_head_expand, atm_head_crop, tpn_head, tpn
 from decode_heads import atm_head_cycle, mask_head, atm_head_accum, atm_head_conv, tpn_atm_head_swin, atm_head_masked
 from losses import atm_loss
 from backbone import vit_shrink, vit_crop, vit_fix_pos
-from necks import deform_detr
-from mmseg_custom import layer_decay_optimizer_constructor
+# from necks import deform_detr
+# from mmseg_custom import layer_decay_optimizer_constructor
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')
