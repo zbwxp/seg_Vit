@@ -19,8 +19,8 @@ from mmseg.apis import multi_gpu_test, single_gpu_test
 from mmseg.datasets import build_dataloader, build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import setup_multi_processes
-from decode_heads import atm_head, atm_head_crop, tpn_atm_head
-from backbone import vit_crop, vit_shrink
+from decode_heads import atm_head, tpn_atm_head
+from backbone import vit_shrink
 from losses import atm_loss
 
 

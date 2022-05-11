@@ -18,12 +18,9 @@ from mmseg.apis import init_random_seed, set_random_seed, train_segmentor
 from mmseg.datasets import build_dataset
 from mmseg.models import build_segmentor
 from mmseg.utils import collect_env, get_root_logger, setup_multi_processes
-from decode_heads import atm_head, atm_head_expand, atm_head_crop, tpn_head, tpn_atm_head, tpn_atm_roll_head
-from decode_heads import atm_head_cycle, mask_head, atm_head_accum, atm_head_conv, tpn_atm_head_swin, atm_head_masked
-from decode_heads import atm_head_new
+from decode_heads import atm_head, tpn_atm_head
 from losses import atm_loss
-from backbone import vit_shrink, vit_crop, vit_fix_pos
-from necks import deform_detr
+from backbone import vit_shrink
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a segmentor')

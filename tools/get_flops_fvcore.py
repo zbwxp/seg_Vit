@@ -5,9 +5,9 @@ from mmcv import Config
 from mmcv.cnn import get_model_complexity_info
 
 from mmseg.models import build_segmentor
-from decode_heads import atm_head, atm_head_crop, atm_head_expand, tpn_head, tpn_atm_head, tpn_atm_roll_head
+from decode_heads import atm_head, tpn_atm_head
 from losses import atm_loss
-from backbone import vit_shrink, vit_crop
+from backbone import vit_shrink
 from fvcore.nn import FlopCountAnalysis
 import torch
 

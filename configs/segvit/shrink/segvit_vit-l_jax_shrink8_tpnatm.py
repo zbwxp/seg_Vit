@@ -1,5 +1,5 @@
 _base_ = [
-    '../segvit_vit-l_jax.py'
+    '../segvit_vit-l_jax_640x640_160k_ade20k.py'
 ]
 out_indices = [7, 23]
 model = dict(
