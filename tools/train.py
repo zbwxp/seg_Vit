@@ -22,7 +22,7 @@ from decode_heads import atm_head, atm_head_expand, atm_head_crop, tpn_head, tpn
 from decode_heads import atm_head_cycle, mask_head, atm_head_accum, atm_head_conv, tpn_atm_head_swin, atm_head_masked
 from decode_heads import atm_head_new, tpn_atm_head_noinit
 from losses import atm_loss
-from backbone import vit_shrink, vit_crop, vit_fix_pos, vit_shrink_direct, vit_shrink_setr
+from backbone import vit_shrink, vit_crop, vit_fix_pos, vit_shrink_direct, vit_shrink_setr, vit_shrink_conv
 from necks import deform_detr
 
 def parse_args():
